@@ -18,6 +18,9 @@
   "author": "Dhruv Prajay Prakash",
   "license": "ISC",
   "dependencies": {
-    "twit": "^2.2.5"
+    "request": "^2.81.0",
+    "request-promise": "^4.2.0",
+    "twit": "^2.2.5",
+    "x-ray": "^2.3.2"
   }
 }
