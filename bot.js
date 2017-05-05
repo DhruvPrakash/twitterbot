@@ -8,6 +8,28 @@ var T = new Twit(config);
 
 var xray = new Xray();
 
+
+var stream = T.stream('user');
+
+
+var seedTopics = ['anime', 'attack+on+titan', 'pokemon', 'konosuba', 'jojo', 'zero+kara'];
+
+stream.on('tweet', someOneTweeted);
+
+function someOneTweeted(eventMsg) {
+	var mentioned = eventMsg.in_reply_to_screen_name;
+	var replyToName = eventMsg.user.screen_name;
+	var jsonstuff = JSON.stringify(eventMsg, null, 2);
+	fs.writeFile('tweet.json', jsonstuff);
+	var replyToId = eventMsg.id_str;
+	// var newTweet;
+	if(mentioned === 'oraoraoraramuda') {
+		//newTweet = '@' + from;
+		tweetMeme(replyToId, replyToName);
+	}
+}
+
+
 var download = function(uri, filename, callback){
   console.log('download called');
   request.head(uri, function(err, res, body){
@@ -18,48 +40,60 @@ var download = function(uri, filename, callback){
   });
 };
 
-xray('https://www.memecenter.com/search?query=anime','img.rrcont',
-  [{
-    src: '@src'
-  }])(function(err, dataArr) {
-  	var rand = Math.floor(Math.random() * dataArr.length);
-  	console.log(dataArr[rand]);
+var tweetMeme = function(replyToId, replyToName) {
+	var rand = Math.floor(Math.random() * seedTopics.length)
+	var baseSeed = 'https://www.memecenter.com';
+	var seedUrl = (seedTopics[rand] === '') ? baseSeed : baseSeed + '/search?query=' + seedTopics[rand];
+	xray(seedUrl,'img.rrcont',
+	  [{
+	    src: '@src'
+	  }])(function(err, dataArr) {
 
-  	download(dataArr[rand]['src'], './images/funny.png', function(){
-  	  var b64content = fs.readFileSync('./images/funny.png', {encoding: 'base64'});
+	  	console.log(dataArr);
+	  	rand = Math.floor(Math.random() * dataArr.length);
+	  	console.log(rand);
+	  	console.log(dataArr[rand]['src'].indexOf('unsafe2.jpg'));
+	  	while(dataArr[rand]['src'].indexOf('unsafe2.jpg') !== -1){
+	  		rand = Math.floor(Math.random() * dataArr.length);
+	  	}
 
-  	  // // //console.log(b64content);
+	  	download(dataArr[rand]['src'], './images/funny.png', function(){
+	  	  var b64content = fs.readFileSync('./images/funny.png', {encoding: 'base64'});
 
-  	  T.post('media/upload', { media_data: b64content }, function (err, data, response) {
-  	    // now we can assign alt text to the media, for use by screen readers and
-  	    // other text-based presentations and interpreters
-  	    var mediaIdStr = data.media_id_string;
-  	    var altText = 'here take this:';
-  	    var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } };
+	  	  // // //console.log(b64content);
 
-  	    if(err) {
-  	    	console.log('error in the post :/');
-  	    	console.log(err);
-  	    }
+	  	  T.post('media/upload', { media_data: b64content }, function (err, data, response) {
+	  	    // now we can assign alt text to the media, for use by screen readers and
+	  	    // other text-based presentations and interpreters
+	  	    var mediaIdStr = data.media_id_string;
+	  	    var altText = 'here take this:';
+	  	    var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } };
 
-  	    T.post('media/metadata/create', meta_params, function (err, data, response) {
-  	      if (!err) {
-  	        // now we can reference the media and post a tweet (media will attach to the tweet)
-  	        var params = { status: 'Take this meme and be happy :)', media_ids: [mediaIdStr] }
+	  	    if(err) {
+	  	    	console.log('error in the post :/');
+	  	    	console.log(err);
+	  	    }
 
-  	        T.post('statuses/update', params, function (err, data, response) {
-  	          console.log(data)
-  	        })
-  	      } else {
-  	      	console.log(err);
-  	      }
-  	    })
-  	  })
+	  	    T.post('media/metadata/create', meta_params, function (err, data, response) {
+	  	      if (!err) {
+	  	        // now we can reference the media and post a tweet (media will attach to the tweet)
+	  	        var params = { status: 'Take this meme and be happy :) @' + replyToName, media_ids: [mediaIdStr], in_reply_to_status_id: replyToId }
 
-  	  console.log('done');
-  	});
+	  	        T.post('statuses/update', params, function (err, data, response) {
+	  	          console.log(data)
+	  	        })
+	  	      } else {
+	  	      	console.log(err);
+	  	      }
+	  	    })
+	  	  })
 
-  })
+	  	  console.log('done');
+	  	});
+
+	  })
+}
+
 
 //authenticate with oauth
 // //get() -> search by hashtag, location, user -> give me all the tweets about pokemon
