@@ -12,7 +12,7 @@ var xray = new Xray();
 var stream = T.stream('user');
 
 
-var seedTopics = ['anime', 'attack+on+titan', 'pokemon', 'konosuba', 'jojo', 'zero+kara'];
+var seedTopics = ['anime', 'attack+on+titan', 'pokemon', 'konosuba', 'jojo', 'zero+kara', 'one+piece', '', 'fate+zero', 'naruto', 'cats', 'neko'];
 
 stream.on('tweet', someOneTweeted);
 
